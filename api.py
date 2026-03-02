@@ -1,22 +1,27 @@
 import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import numpy as np
 import tensorflow as tf
 from PIL import Image
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from tensorflow.keras.applications.efficientnet import preprocess_input
+from keras.applications.efficientnet import preprocess_input
 
 app = Flask(__name__)
 CORS(app)
 
 print(f"Loading best_model.h5 on TF {tf.__version__}")
+
+# Load the model - Keras 3 should handle it natively
+model = None
 try:
-    # Now that we downgraded TF/Keras to 2.15, the original .h5 will load perfectly
     model = tf.keras.models.load_model("best_model.h5", compile=False)
-    print("Model loaded successfully.")
+    print("[OK] Model loaded successfully!")
 except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
+    print(f"[FAIL] Model loading failed: {str(e)[:200]}")
+    print("Server will start but predictions will return errors.")
 
 class_names = [
     "Actinic Keratosis",
